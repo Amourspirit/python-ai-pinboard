@@ -79,4 +79,4 @@ The application logs to `app.log` in the project root. The log level is set to `
 
 ## Example Output
 
-See example on [PASTEBIN][https://pastebin.com/5TxHwQEP]
+See example on [PASTEBIN](https://pastebin.com/5TxHwQEP)
