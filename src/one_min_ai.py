@@ -7,7 +7,6 @@ import requests
 logger = logging.getLogger(__name__)
 
 ONE_MIN_AI_API_KEY = os.getenv("ONE_MIN_AI_API_KEY")
-ONE_MIN_CHAT_CONVERSATION_ID = os.getenv("ONE_MIN_CHAT_CONVERSATION_ID")
 API_URL = "https://api.1min.ai/api/features"
 
 
@@ -15,12 +14,13 @@ def _get_headers():
     return {"API-KEY": ONE_MIN_AI_API_KEY, "Content-Type": "application/json"}
 
 
-def get_youtube_summary(url: str) -> str:
+def get_youtube_summary(url: str, model: str = "deepseek-chat") -> str:
     """
     Get a summary of a YouTube video using the 1min.ai API.
 
     Args:
         url (str): The URL of the YouTube video to summarize.
+        model (str, optional): The AI model to use. Defaults to "deepseek-chat".
 
     Returns:
         str: A summary of the video content.
@@ -30,7 +30,7 @@ def get_youtube_summary(url: str) -> str:
     """
     data = {
         "type": "YOUTUBE_SUMMARIZER",
-        "model": "deepseek-chat",
+        "model": model,
         "conversationId": "YOUTUBE_SUMMARIZER",
         "videoUrl": url,
         "promptObject": {"videoUrl": url, "language": "English"},
@@ -52,13 +52,14 @@ def get_youtube_summary(url: str) -> str:
         raise e
 
 
-def query_chat(prompt: str, model="deepseek-chat") -> str:
+def query_chat(prompt: str, model="deepseek-chat", conversation_id: str = "") -> str:
     """
     Query the AI chat model with a prompt.
 
     Args:
         prompt (str): The text prompt to send to the AI.
         model (str, optional): The AI model to use. Defaults to "deepseek-chat".
+        conversation_id (str, optional): The conversation ID to use. Defaults to "".
 
     Returns:
         str: The AI generated response.
@@ -66,10 +67,11 @@ def query_chat(prompt: str, model="deepseek-chat") -> str:
     Raises:
         requests.exceptions.RequestException: If there is an error with the API request.
     """
+    # conversationId is not required unless you need the conversation to persist.
+    # A lot of credits are saved by not using a conversationId.
     data = {
         "type": "CHAT_WITH_AI",
         "model": model,
-        "conversationId": ONE_MIN_CHAT_CONVERSATION_ID,
         "promptObject": {
             "imageList": [],
             "isMixed": False,
@@ -80,6 +82,8 @@ def query_chat(prompt: str, model="deepseek-chat") -> str:
             "youtubeUrl": "",
         },
     }
+    if conversation_id:
+        data["conversationId"] = conversation_id
 
     try:
         response = requests.post(API_URL, headers=_get_headers(), data=json.dumps(data))
@@ -97,7 +101,7 @@ def query_chat(prompt: str, model="deepseek-chat") -> str:
         raise e
 
 
-def query_tags(content: str, model="deepseek-chat") -> list[str]:
+def query_tags(content: str, model: str = "deepseek-chat") -> list[str]:
     """
     Generate tags from content using AI.
 
@@ -130,7 +134,9 @@ Below is the text to use for tag generation:
     return dd["tags"]
 
 
-def shorten_content(content: str, max_words: int = 40, model="deepseek-chat") -> str:
+def shorten_content(
+    content: str, max_words: int = 40, model: str = "deepseek-chat"
+) -> str:
     """
     Shorten content to a maximum number of words.
 

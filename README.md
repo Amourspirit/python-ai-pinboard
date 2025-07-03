@@ -40,14 +40,11 @@ Create a `.env` file in the project root with the following:
 
 ```env
 ONE_MIN_AI_API_KEY=your_key_here
-ONE_MIN_CHAT_CONVERSATION_ID=your_key_here
 PASTEBIN_API_KEY=your_key_here
 PINBOARD_API_KEY=your_key_here
 PASTEBIN_USERNAME=your_username_here
 PASTEBIN_PASSWORD=your_password_here
 ```
-
-For `ONE_MIN_CHAT_CONVERSATION_ID`, you need to create a conversation with One Minute AI. The conversation ID is the last part of the URL when you are in the conversation. For example, if the URL is `https://app.1min.ai/chat-with-ai/123456789`, then the conversation ID is `123456789`.
 
 ## Usage
 
@@ -64,7 +61,6 @@ By default tags are auto generated but you can add extra tags if you need them.
 python app.py youtube --url "https://www.youtube.com/watch?v=example" --tags "tag1, tag2, tag3"
 ```
 
-
 ## Dependencies
 
 - dotenv >= 0.9.9
@@ -80,3 +76,7 @@ See LICENSE file for details.
 ## Logging
 
 The application logs to `app.log` in the project root. The log level is set to `INFO`. You can change the log level in `app.py`.
+
+## Example Output
+
+See example on [PASTEBIN][https://pastebin.com/5TxHwQEP]
