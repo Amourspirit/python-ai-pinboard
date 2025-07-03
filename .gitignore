@@ -12,3 +12,4 @@ wheels/
 /temp
 .env
 .python-version
+*.log
