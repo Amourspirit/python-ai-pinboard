@@ -40,6 +40,7 @@ from src import youtube_info
 from src import pastebin
 from src.pb_enum import PastebinExpire
 from src import pinboard
+from src import text_edit
 
 
 def format_seconds_to_hms(total_seconds: int) -> str:
@@ -125,6 +126,11 @@ def _args_action_youtube(args: argparse.Namespace) -> None:
 
         summary = one_min_ai.get_youtube_summary(url)
         shortened_summary = one_min_ai.shorten_content(summary, 40)
+        shortened_summary = text_edit.markdown_to_text(shortened_summary)
+        shortened_summary = text_edit.remove_first_line_summary_count(shortened_summary)
+        shortened_summary = text_edit.remove_last_line_if_has_parentheses(
+            shortened_summary
+        )
         fmt_time = format_seconds_to_hms(info["duration"])
         logger.info("Youtube Video Duration: %s", fmt_time)
         summary = f"# {info['title']}\n\n## Summary\n\n{summary}\n\n## Details\n\n- Duration: {fmt_time}\n- URL: [{info['title']}]({url})"
