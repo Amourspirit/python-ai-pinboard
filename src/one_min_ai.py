@@ -3,6 +3,7 @@ import os
 import json
 import logging
 import requests
+from .ex import NoCaptionsError
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,9 @@ def get_youtube_summary(url: str, model: str = "deepseek-chat") -> str:
         return result
 
     except requests.exceptions.RequestException as e:
+        if e.response.reason == "Forbidden" and "No captions" in e.response.text:
+            logging.error("get_youtube_summary() No captions found for video")
+            raise NoCaptionsError("No captions found for video")
         logging.error("get_youtube_summary() An error occurred: %s", e)
         raise e
 

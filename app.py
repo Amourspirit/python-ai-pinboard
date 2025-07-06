@@ -42,6 +42,7 @@ from src.pb_enum import PastebinExpire
 from src import pinboard
 from src import text_edit
 from src import open_router_ai
+from src import ex
 
 
 def format_seconds_to_hms(total_seconds: int) -> str:
@@ -80,6 +81,8 @@ def format_seconds_to_hms(total_seconds: int) -> str:
 
 
 # region Args Parser
+
+
 def _create_parser(name: str) -> argparse.ArgumentParser:
     return argparse.ArgumentParser(description=name)
 
@@ -134,7 +137,12 @@ def _args_process_cmd(args: argparse.Namespace) -> None:
 def _args_action_youtube(args: argparse.Namespace) -> None:
     pb_result = False
     url = args.url
-    ulr_prefixes = ("https://youtu.be/", "https://www.youtube.com/watch?v=")
+    ulr_prefixes = (
+        "https://youtu.be/",
+        "https://www.youtube.com/watch?v=",
+        "https://youtube.com/shorts/",
+        "https://www.youtube.com/shorts/",
+    )
     if not url.startswith(ulr_prefixes):
         raise ValueError(f"URL must start with {ulr_prefixes}")
     try:
@@ -148,18 +156,31 @@ def _args_action_youtube(args: argparse.Namespace) -> None:
         logger.info("Youtube Video Title Title: %s", info["title"])
         logger.info("Youtube Video Duration: %s", info["duration"])
 
-        summary = one_min_ai.get_youtube_summary(url)
-        shortened_summary = one_min_ai.shorten_content(summary, 40)
-        shortened_summary = text_edit.markdown_to_text(shortened_summary)
-        shortened_summary = text_edit.remove_first_line_summary_count(shortened_summary)
-        shortened_summary = text_edit.remove_last_line_if_has_parentheses(
-            shortened_summary
-        )
+        summary = ""
+        try:
+            summary = one_min_ai.get_youtube_summary(url)
+        except ex.NoCaptionsError:
+            logger.info(
+                "Continuing without captions. No pastebin entry will be created."
+            )
+
+        if summary:
+            shortened_summary = one_min_ai.shorten_content(summary, 40)
+            shortened_summary = text_edit.markdown_to_text(shortened_summary)
+            shortened_summary = text_edit.remove_first_line_summary_count(
+                shortened_summary
+            )
+            shortened_summary = text_edit.remove_last_line_if_has_parentheses(
+                shortened_summary
+            )
         fmt_time = format_seconds_to_hms(info["duration"])
         logger.info("Youtube Video Duration: %s", fmt_time)
-        summary = f"# {info['title']}\n\n## Summary\n\n{summary}\n\n## Details\n\n- Duration: {fmt_time}\n- URL: [{info['title']}]({url})"
+        if summary:
+            summary = f"# {info['title']}\n\n## Summary\n\n{summary}\n\n## Details\n\n- Duration: {fmt_time}\n- URL: [{info['title']}]({url})"
+            tags = one_min_ai.query_tags(summary)
+        else:
+            tags = []
 
-        tags = one_min_ai.query_tags(summary)
         if "YouTube" not in tags:
             tags.append("YouTube")
         if "Video" not in tags:
@@ -168,15 +189,18 @@ def _args_action_youtube(args: argparse.Namespace) -> None:
             if tag not in tags:
                 tags.append(tag)
 
-        tags_str = "\n- ".join(tags)
-        summary += f"\n\n## Tags\n- {tags_str}\n"
+        if summary:
+            tags_str = "\n- ".join(tags)
+            summary += f"\n\n## Tags\n- {tags_str}\n"
 
-        link = pastebin.create_paste(
-            info["title"], summary, expire=PastebinExpire.EXPIRE_N
-        )
-        logger.info("Paste created: %s for %s", link, info["title"])
-        extended_desc = f"See Summary Here: {link}"
-        extended_desc += f"\n\n<blockquote>\n{shortened_summary}\n</blockquote>"
+            link = pastebin.create_paste(
+                info["title"], summary, expire=PastebinExpire.EXPIRE_N
+            )
+            logger.info("Paste created: %s for %s", link, info["title"])
+            extended_desc = f"See Summary Here: {link}"
+            extended_desc += f"\n\n<blockquote>\n{shortened_summary}\n</blockquote>"
+        else:
+            extended_desc = f"Youtube Video Duration: {fmt_time}"
         pb_result = pinboard.add_link(
             url=url, description=info["title"], extended=extended_desc, tags=tags
         )
@@ -258,7 +282,7 @@ def main():
 
 
 if __name__ == "__main__":
-    # sys.argv.append("web")
+    # sys.argv.append("youtube")
     # sys.argv.append("--url")
-    # sys.argv.append("https://planetscale.com/")
+    # sys.argv.append("https://youtube.com/shorts/Twpp0mJjDRQ?si=N42x-UeT_BpP_HAo")
     sys.exit(main())
