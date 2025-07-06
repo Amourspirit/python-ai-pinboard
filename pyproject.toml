@@ -1,6 +1,6 @@
 [project]
 name = "ai-pinboard"
-version = "0.1.2"
+version = "0.2.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12.3"
@@ -12,6 +12,7 @@ dependencies = [
     "beautifulsoup4>=4.13.4",
     "dotenv>=0.9.9",
     "markdown>=3.8.2",
+    "openai>=1.93.0",
     "pbwrap>=1.5.0",
     "pinboard>=2.1.9",
     "requests>=2.32.4",

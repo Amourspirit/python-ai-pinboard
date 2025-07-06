@@ -41,6 +41,7 @@ from src import pastebin
 from src.pb_enum import PastebinExpire
 from src import pinboard
 from src import text_edit
+from src import open_router_ai
 
 
 def format_seconds_to_hms(total_seconds: int) -> str:
@@ -102,9 +103,32 @@ def _args_youtube_summary(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _args_web_summary(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "-u",
+        "--url",
+        type=str,
+        required=True,
+        help="The URL of the website to summarize and bookmark",
+        dest="url",
+    )
+    parser.add_argument(
+        "-t",
+        "--tags",
+        type=str,
+        required=False,
+        help="Additional tags to add (comma separated)",
+        dest="tags",
+    )
+
+
 def _args_process_cmd(args: argparse.Namespace) -> None:
     if args.command == "youtube":
         _args_action_youtube(args=args)
+    elif args.command == "web":
+        _args_action_web_summary(args=args)
+    else:
+        raise ValueError(f"Unknown command: {args.command}")
 
 
 def _args_action_youtube(args: argparse.Namespace) -> None:
@@ -168,6 +192,41 @@ def _args_action_youtube(args: argparse.Namespace) -> None:
         raise Exception("Pinboard link not added")
 
 
+def _args_action_web_summary(args: argparse.Namespace) -> None:
+    pb_result = False
+    url = args.url
+
+    try:
+        new_tags = args.tags
+        if new_tags:
+            new_tags = [new_tags.strip() for tag in new_tags.split(",")]
+        else:
+            new_tags = []
+        info = open_router_ai.get_domain_summary(url)
+        logger.info("URL: %s", info["url"])
+
+        summary = text_edit.markdown_to_text(info["summary"])
+        summary = f"<blockquote>\n{summary}\n</blockquote>"
+
+        tags = info["tags"]
+        for tag in new_tags:
+            if tag not in tags:
+                tags.append(tag)
+
+        pb_result = pinboard.add_link(
+            url=url, description=info["title"], extended=summary, tags=tags
+        )
+
+    except Exception as e:
+        logger.error("main() An error occurred: %s", e)
+        raise e
+    if pb_result is True:
+        logger.info("Pinboard link added")
+    else:
+        logger.error("Pinboard link not added: %s", pb_result)
+        raise Exception("Pinboard link not added")
+
+
 # endregion Args Parser
 
 
@@ -183,6 +242,12 @@ def main():
         )
         _args_youtube_summary(parser_youtube)
 
+        parser_youtube = subparser.add_parser(
+            name="web",
+            help="Generate a summary of a website and upload it to Pinboard.",
+        )
+        _args_web_summary(parser_youtube)
+
         args = parser.parse_args()
         _args_process_cmd(args)
         logger.info("Script completed successfully.")
@@ -193,4 +258,7 @@ def main():
 
 
 if __name__ == "__main__":
+    # sys.argv.append("web")
+    # sys.argv.append("--url")
+    # sys.argv.append("https://planetscale.com/")
     sys.exit(main())
