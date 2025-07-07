@@ -4,3 +4,7 @@ class PastbinError(Exception):
 
 class NoCaptionsError(Exception):
     pass
+
+
+class PastebinFilterError(Exception):
+    pass

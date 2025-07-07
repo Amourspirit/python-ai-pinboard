@@ -7,19 +7,14 @@ import requests
 from pbwrap import Pastebin
 from .pb_enum import PastebinFormat
 from .pb_enum import PastebinExpire
-from .ex import PastbinError
+from .pb_enum import PastebinListing
+from .ex import PastbinError, PastebinFilterError
 
 logger = logging.getLogger(__name__)
 
 PASTEBIN_API_KEY = os.getenv("PASTEBIN_API_KEY")
 PASTEBIN_USERNAME = os.getenv("PASTEBIN_USERNAME")
 PASTEBIN_PASSWORD = os.getenv("PASTEBIN_PASSWORD")
-
-
-class PastebinListing(IntEnum):
-    PUBLIC = 0
-    UNLISTED = 1
-    PRIVATE = 2
 
 
 def create_paste(
@@ -57,6 +52,8 @@ def create_paste(
             api_paste_format=str(format),
         )
         if not paste.startswith("https://pastebin.com/"):
+            if "SMART filters" in paste and "Private" in paste:
+                raise PastebinFilterError(paste)
             raise PastbinError(
                 "Bad API request, invalid api_paste_format for %s ERROR: %s",
                 title,

@@ -1,5 +1,6 @@
 from __future__ import annotations
 import re
+import json
 import markdown
 from bs4 import BeautifulSoup
 
@@ -64,3 +65,19 @@ def remove_first_line_summary_count(text: str) -> str:
         return "\n".join(lines[1:]).lstrip()
     else:
         return text
+
+
+def get_dict_json(text: str) -> dict:
+    """
+    Extract the JSON object from a string that contains a JSON object.
+
+    Args:
+        text (str): The input text to process.
+
+    Returns:
+        dict: The JSON object extracted from the text.
+    """
+    # find the first instance of { and the last instance of }
+    start = text.find("{")
+    end = text.rfind("}")
+    return json.loads(text[start : end + 1])

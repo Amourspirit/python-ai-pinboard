@@ -3,6 +3,7 @@ import os
 import logging
 import json
 from openai import OpenAI
+from .text_edit import get_dict_json
 
 _BASE_URL = "https://openrouter.ai/api/v1"
 _API_KEY = os.getenv("OPEN_ROUTER_API_KEY")
@@ -60,12 +61,16 @@ def get_domain_summary(
         content = response.choices[0].message.content
         if not content:
             raise Exception("No content returned")
-        lines = content.split("\n")
-        # remove first line ```
-        lines = lines[1:]
-        # remove last line ```
-        lines = lines[:-1]
-        dd = json.loads("\n".join(lines))
+
+        # lines = content.split("\n")
+        # lines = lines[1:]
+        # lines = lines[:-1]
+        # dd = json.loads("\n".join(lines))
+        dd = get_dict_json(content)
+        tags = dd["tags"]
+        # remove all empyty tags
+        tags = [tag for tag in tags if tag]
+        dd["tags"] = tags
         dd["url"] = url
         return dd
 

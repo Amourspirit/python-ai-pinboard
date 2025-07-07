@@ -38,7 +38,7 @@ logger = logging.getLogger("app")
 from src import one_min_ai
 from src import youtube_info
 from src import pastebin
-from src.pb_enum import PastebinExpire
+from src.pb_enum import PastebinExpire, PastebinListing
 from src import pinboard
 from src import text_edit
 from src import open_router_ai
@@ -193,9 +193,20 @@ def _args_action_youtube(args: argparse.Namespace) -> None:
             tags_str = "\n- ".join(tags)
             summary += f"\n\n## Tags\n- {tags_str}\n"
 
-            link = pastebin.create_paste(
-                info["title"], summary, expire=PastebinExpire.EXPIRE_N
-            )
+            try:
+                link = pastebin.create_paste(
+                    info["title"], summary, expire=PastebinExpire.EXPIRE_N
+                )
+            except ex.PastebinFilterError:
+                logger.info(
+                    "Pastebin reporst a filter error. Creating a private paste."
+                )
+                link = pastebin.create_paste(
+                    info["title"],
+                    summary,
+                    expire=PastebinExpire.EXPIRE_N,
+                    listing=PastebinListing.PRIVATE,
+                )
             logger.info("Paste created: %s for %s", link, info["title"])
             extended_desc = f"See Summary Here: {link}"
             extended_desc += f"\n\n<blockquote>\n{shortened_summary}\n</blockquote>"
@@ -282,7 +293,9 @@ def main():
 
 
 if __name__ == "__main__":
-    # sys.argv.append("youtube")
+    # sys.argv.append("web")
     # sys.argv.append("--url")
-    # sys.argv.append("https://youtube.com/shorts/Twpp0mJjDRQ?si=N42x-UeT_BpP_HAo")
+    # sys.argv.append("https://firebase.google.com/")
+    # sys.argv.append("--tags")
+    # sys.argv.append("Prototype,FullStack,Cloud")
     sys.exit(main())

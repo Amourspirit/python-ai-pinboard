@@ -1,4 +1,10 @@
-from enum import StrEnum
+from enum import IntEnum, StrEnum
+
+
+class PastebinListing(IntEnum):
+    PUBLIC = 0
+    UNLISTED = 1
+    PRIVATE = 2
 
 
 class PastebinExpire(StrEnum):
