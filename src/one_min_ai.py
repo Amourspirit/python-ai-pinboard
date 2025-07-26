@@ -4,6 +4,8 @@ import json
 import logging
 import requests
 from .ex import NoCaptionsError
+from . import text_edit
+
 
 logger = logging.getLogger(__name__)
 
@@ -116,7 +118,8 @@ def query_tags(content: str, model: str = "deepseek-chat") -> list[str]:
     Returns:
         list[str]: A list of CamelCase tags (maximum 8) generated from the content.
     """
-    prompt = """Generate tags that are a appropriate
+    prompt = text_edit.ai_prompt_pre()
+    prompt += """Generate tags that are a appropriate
 
 Rules for generation
 - Max of 8 tags

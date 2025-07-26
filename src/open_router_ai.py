@@ -1,9 +1,8 @@
 from __future__ import annotations
 import os
 import logging
-import json
 from openai import OpenAI
-from .text_edit import get_dict_json
+from .text_edit import get_dict_json, ai_prompt_pre
 
 _BASE_URL = "https://openrouter.ai/api/v1"
 _API_KEY = os.getenv("OPEN_ROUTER_API_KEY")
@@ -29,8 +28,9 @@ def get_domain_summary(
     Raises:
         Exception: If there is an error with the API request.
     """
+    prompt = ai_prompt_pre()
 
-    prompt = f"""Analyze the website `{url}` and generate a title, a concise summary, and relevant tags.
+    prompt += f"""Analyze the website `{url}` and generate a title, a concise summary, and relevant tags.
 
 **Generation Rules:**
 * The summary must be in Markdown format.

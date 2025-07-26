@@ -1,8 +1,62 @@
 from __future__ import annotations
 import re
 import json
+from datetime import datetime, timezone
 import markdown
 from bs4 import BeautifulSoup
+
+HUMAN_DATETIME = "%a %b %d %H:%M:%S %Y %z"
+HUMAN_DATE = "%b %d, %Y"
+HUMAN_TIME = "%I:%M:%S %p"
+JSON_DATETIME = "%Y-%m-%dT%H:%M:%S.%fZ"  # Must be UTC
+ISO8601_DATETIME = "%Y-%m-%dT%H:%M:%S%z"
+ISO8601_DATE = "%Y-%m-%d"
+ISO8601_TIME = "%H:%M:%S"
+COMMON_DATETIME = "%d/%b/%Y:%H:%M:%S %z"
+WEB_UTC_DATETIME = "%a, %b %d, %Y at %H:%M UTC"
+
+
+def now(utc=True) -> datetime:
+    """
+    Get the current datetime, either in UTC or local time.
+
+    Args:
+        utc (bool, optional): If True, returns UTC time. If False, returns local time. Defaults to True.
+
+    Returns:
+        datetime: The current datetime object.
+    """
+    if utc:
+        return datetime.now(timezone.utc)
+    return datetime.now()
+
+
+def date_time_web_utc() -> str:
+    """
+    Get the current UTC date and time formatted for web display.
+
+    Returns:
+        str: The current UTC date and time in format 'Day, Month DD, YYYY at HH:MM UTC'
+    """
+    now_time = now()
+    return now_time.strftime(WEB_UTC_DATETIME)
+
+
+def ai_prompt_pre() -> str:
+    """
+    Generate a standard prefix for AI prompts that includes the current date/time
+    and instructions for AI response formatting.
+
+    Returns:
+        str: A formatted string containing the current date/time and AI instructions.
+    """
+    result = f"""Today is {date_time_web_utc()}
+
+You are working as part of an AI system, so no chit chat and no explaning what you're are doing an why.
+DO NOT start with "OKAY", or "Alright", or "Sure", or "Yes", or "OK", or any preambles. Just the outupt please.
+
+"""
+    return result
 
 
 def markdown_to_text(markdown_text: str) -> str:
